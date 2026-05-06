@@ -8,11 +8,6 @@ import os
 import json
 from dotenv import load_dotenv
 
-import pickle
-from pathlib import Path
-
-
-
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 gemini_model = genai.GenerativeModel("gemini-2.5-flash")
@@ -31,7 +26,6 @@ _session_questions = []
 # stores summary node embeddings for comparison
 # format: {"node_id": {"date": "...", "summary": "...", "embedding": [...]}}
 _summary_store = {}
-GRAPH_MEMORY_FILE = Path("graph_memory.pkl")
 
 
 
@@ -44,7 +38,6 @@ def add_dataset_node(filename: str, shape: dict) -> str:
         columns=shape["columns"],
         timestamp=datetime.now().isoformat()
     )
-    save_graph_memory()
     return node_id
 
 def add_profiling_node(dataset_node_id: str, profile_summary: dict) -> str:
@@ -58,7 +51,6 @@ def add_profiling_node(dataset_node_id: str, profile_summary: dict) -> str:
         timestamp=datetime.now().isoformat()
     )
     workflow_graph.add_edge(dataset_node_id, node_id, action="profiled")
-    save_graph_memory()
     return node_id
 
 def log_question(question: str, answer: str):
@@ -116,7 +108,7 @@ def add_summary_node(parent_node_id: str) -> dict:
 
     questions_summarized = len(_session_questions)
     _session_questions.clear()
-    save_graph_memory()
+
     return {
         "node_id": node_id,
         "date": date_label,
@@ -175,7 +167,7 @@ def compare_sessions(node_id_a: str, node_id_b: str) -> dict:
         new_in_b = []
         retained = []
         drift_scores = []
-    
+
     return {
         "session_a": {"node_id": node_id_a, "date": a["date"]},
         "session_b": {"node_id": node_id_b, "date": b["date"]},
@@ -196,41 +188,6 @@ def get_last_node_id() -> str | None:
     if not workflow_graph.nodes:
         return None
     return list(workflow_graph.nodes)[-1]
-
-
-def save_graph_memory():
-    """
-    Persist graph + summaries to disk.
-    """
-
-    data = {
-        "graph": workflow_graph,
-        "summary_store": _summary_store,
-        "node_counters": _node_counters
-    }
-
-    with open(GRAPH_MEMORY_FILE, "wb") as f:
-        pickle.dump(data, f)
-
-
-def load_graph_memory():
-    """
-    Restore graph memory on server startup.
-    """
-
-    global workflow_graph
-    global _summary_store
-    global _node_counters
-
-    if not GRAPH_MEMORY_FILE.exists():
-        return
-
-    with open(GRAPH_MEMORY_FILE, "rb") as f:
-        data = pickle.load(f)
-
-    workflow_graph = data["graph"]
-    _summary_store = data["summary_store"]
-    _node_counters = data["node_counters"]
 
 def get_graph_state() -> dict:
     nodes = []
