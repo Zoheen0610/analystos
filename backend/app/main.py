@@ -14,8 +14,7 @@ app = FastAPI(title="AnalystOS Lite", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "https://analyzeos.netlify.app/"
+        "*"
     ],
     allow_credentials=True,
     allow_methods=["*"],
