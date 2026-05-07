@@ -86,3 +86,10 @@ input:focus {
   border-color: rgba(110,168,255,0.4);
   box-shadow: 0 0 0 4px rgba(110,168,255,0.08);
 }
+
+@media (min-width: 768px) {
+  /* restore sidebar layout on desktop */
+  body > #root > div {
+    flex-direction: row;
+  }
+}
