@@ -1,7 +1,7 @@
 # AnalystOS 
 
 AI-powered analytical workspace for natural language dataset exploration, semantic retrieval, and agentic preprocessing workflows.
-
+<a href="https://analyzeos.netlify.app/">Live</a>
 ---
 
 ## Features
