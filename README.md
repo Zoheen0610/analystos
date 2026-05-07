@@ -60,8 +60,8 @@ Insights / Preprocessing Actions
 - Context-grounded analytical querying using RAG
 
 ---
-![AnalystOS Demo](./assets/Screenshot 2026-05-07 095827.png)
-![AnalystOS Demo](./assets/Screenshot 2026-05-07 093301.png)
+[AnalystOS Demo](./assets/Screenshot 2026-05-07 095827.png)
+[AnalystOS Demo](./assets/Screenshot 2026-05-07 093301.png)
 ## Installation
 
 ### Clone Repository
