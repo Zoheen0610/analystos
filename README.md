@@ -1,4 +1,4 @@
-# AnalystOS Lite
+# AnalystOS 
 
 AI-powered analytical workspace for natural language dataset exploration, semantic retrieval, and agentic preprocessing workflows.
 
