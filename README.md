@@ -1,7 +1,7 @@
 # AnalystOS 
 
 AI-powered analytical workspace for natural language dataset exploration, semantic retrieval, and agentic preprocessing workflows.
-
+<a href="https://analyzeos.netlify.app/">Live</a>
 ---
 
 ## Features
@@ -60,6 +60,11 @@ Insights / Preprocessing Actions
 - Context-grounded analytical querying using RAG
 
 ---
+### Dashboard
+<img src="./assets/Screenshot%202026-05-07%20095827.png" width="900"/>
+
+### Workflow Analysis
+<img src="./assets/Screenshot%202026-05-07%20093301.png" width="900"/>
 
 ## Installation
 
