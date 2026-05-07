@@ -96,14 +96,15 @@ export default function App() {
 
         {/* mobile top bar */}
         {isMobile && (
-          <div style={{
-            position: 'sticky', top: 0, zIndex: 30,
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '12px 16px',
-            background: 'rgba(6,7,11,0.9)',
-            backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid var(--border)'
-          }}>
+  <div style={{
+    position: 'sticky', top: 0, zIndex: 100,  // was 30, bump to 100
+    display: 'flex', alignItems: 'center', gap: 12,
+    padding: '12px 16px',
+    background: 'rgba(6,7,11,0.97)',  // more opaque
+    backdropFilter: 'blur(12px)',
+    borderBottom: '1px solid var(--border)',
+    boxShadow: '0 2px 20px rgba(0,0,0,0.4)'  // add shadow so it lifts above content
+  }}>
             <button onClick={() => setMenuOpen(o => !o)} style={{
               background: 'none', border: '1px solid var(--border)',
               borderRadius: 6, padding: '6px 8px', color: 'var(--text)',

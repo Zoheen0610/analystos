@@ -93,3 +93,9 @@ input:focus {
     padding-top: 16px !important;
   }
 }
+@media (max-width: 767px) {
+  /* chat page — let it flow under the app topbar */
+  .chat-container {
+    height: calc(100dvh - 49px) !important;
+  }
+}
