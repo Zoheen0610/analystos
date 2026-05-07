@@ -1,17 +1,17 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from app.services.codegen import generate_suggestions, generate_preprocessing_code
-from app.routes.upload import _stored_profile
+from app.routes.upload import get_active_profile
 
 router = APIRouter()
 
 @router.post("/preprocess/full")
 async def full_preprocessing_pipeline():
-    if not _stored_profile:
+    profile = get_active_profile()
+    if not profile:
         raise HTTPException(status_code=404, detail="Upload a dataset first")
-
-    suggestions = generate_suggestions(_stored_profile)
-    code_result = generate_preprocessing_code(_stored_profile, suggestions)
+    suggestions = generate_suggestions(profile)
+    code_result = generate_preprocessing_code(profile, suggestions)
 
     return JSONResponse(content={
         "step_1_suggestions": suggestions,

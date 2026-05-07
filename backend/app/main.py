@@ -5,8 +5,22 @@ from app.routes.graph import router as graph_router
 from app.routes.search import router as search_router
 from app.routes.preprocess import router as preprocess_router
 # from app.services.graph import load_graph_memory
+from app.routes.eval import router as eval_router
+
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="AnalystOS Lite", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # load_graph_memory()
 
@@ -15,6 +29,7 @@ app.include_router(chat_router)
 app.include_router(graph_router)
 app.include_router(search_router)
 app.include_router(preprocess_router)
+app.include_router(eval_router)
 
 @app.get("/")
 def root():

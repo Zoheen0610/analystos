@@ -1,7 +1,7 @@
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
-
+from sklearn.metrics.pairwise import cosine_similarity
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # column search index
@@ -54,6 +54,7 @@ def build_profile_chunks(profile: dict):
     _profile_chunks.append({
         "section": "dataset_overview",
         "content": (
+            f"Active dataset filename: {profile.get('filename', 'unknown')}. "
             f"Dataset has {profile['shape']['rows']} rows and "
             f"{profile['shape']['columns']} columns. "
             f"Columns: {', '.join(profile['columns'])}. "
@@ -125,37 +126,91 @@ def build_profile_chunks(profile: dict):
     _profile_chunk_index.add(embeddings)
 
 def retrieve_relevant_chunks(query: str, top_k: int = 3) -> dict:
-    """
-    Retrieve only the profile sections relevant to the query.
-    Returns chunks above threshold + metadata about what was retrieved.
-    """
     if _profile_chunk_index is None or not _profile_chunks:
         return {"chunks": [], "retrieved_sections": [], "warning": "Profile not indexed yet"}
 
     query_vec = model.encode([query], convert_to_numpy=True)
     query_vec = query_vec / np.linalg.norm(query_vec, axis=1, keepdims=True)
 
+    # search all chunks
     scores, indices = _profile_chunk_index.search(
-        query_vec, min(top_k, len(_profile_chunks))
+        query_vec, len(_profile_chunks)  # search ALL, not just top_k
     )
 
     retrieved = []
     retrieved_sections = []
     for score, idx in zip(scores[0], indices[0]):
         if idx != -1 and float(score) >= RETRIEVAL_THRESHOLD:
-            chunk = _profile_chunks[idx]
-            retrieved.append(chunk["content"])
+            retrieved.append(_profile_chunks[idx]["content"])
             retrieved_sections.append({
-                "section": chunk["section"],
+                "section": _profile_chunks[idx]["section"],
                 "similarity": round(float(score), 3)
             })
 
-    if not retrieved:
-        # fallback — return overview chunk so LLM isn't totally blind
-        retrieved = [_profile_chunks[0]["content"]]
-        retrieved_sections = [{"section": "dataset_overview", "similarity": 0.0}]
+    # if nothing retrieved OR it's a broad/summary question — return everything
+    broad_keywords = {"summary", "stats", "overview", "all", "everything", 
+                      "describe", "tell me about", "what is", "explain"}
+    query_lower = query.lower()
+    is_broad = not retrieved or any(kw in query_lower for kw in broad_keywords)
 
+    if is_broad:
+        retrieved = [c["content"] for c in _profile_chunks]
+        retrieved_sections = [
+            {"section": c["section"], "similarity": "broad_query"} 
+            for c in _profile_chunks
+        ]
+
+    # cap at top_k after broad check
     return {
-        "chunks": retrieved,
+        "chunks": retrieved[:top_k] if not is_broad else retrieved,
         "retrieved_sections": retrieved_sections
     }
+GRAPH_RETRIEVAL_THRESHOLD = 0.35
+
+def node_to_text(node: dict) -> str:
+    if node["type"] == "profiling":
+        parts = []
+        if node.get("missing_columns"):
+            parts.append(f"missing data in {', '.join(node['missing_columns'])}")
+        if node.get("skewed_columns"):
+            parts.append(f"skewed columns {', '.join(node['skewed_columns'])}")
+        if node.get("outlier_columns"):
+            parts.append(f"outliers in {', '.join(node['outlier_columns'])}")
+        if node.get("top_correlations"):
+            parts.append("correlations: " + ", ".join([
+                f"{c['col1']} and {c['col2']} at {c['correlation']}"
+                for c in node["top_correlations"]
+            ]))
+        return f"Dataset profiling: {'. '.join(parts)}" if parts else ""
+
+    elif node["type"] == "session_summary":
+        return f"Past session on {node.get('date', '')}: {node.get('summary', '')}"
+
+    return ""
+
+
+def retrieve_relevant_graph_nodes(question: str, graph_state: dict, top_k: int = 2) -> list[str]:
+    if not graph_state:
+        return []
+
+    node_texts = []
+    for node in graph_state.get("nodes", []):
+        text = node_to_text(node)
+        if text:
+            node_texts.append(text)
+
+    if not node_texts:
+        return []
+
+    node_vecs = model.encode(node_texts, convert_to_numpy=True)
+    node_vecs = node_vecs / np.linalg.norm(node_vecs, axis=1, keepdims=True)
+
+    query_vec = model.encode([question], convert_to_numpy=True)
+    query_vec = query_vec / np.linalg.norm(query_vec, axis=1, keepdims=True)
+
+    scores = cosine_similarity(query_vec, node_vecs)[0]
+
+    return [
+        node_texts[i] for i in np.argsort(scores)[::-1]
+        if scores[i] >= GRAPH_RETRIEVAL_THRESHOLD
+    ][:top_k]

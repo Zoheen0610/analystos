@@ -68,7 +68,7 @@ def generate_session_summary() -> str:
         for item in _session_questions
     ])
     prompt = f"""
-Summarize this analyst's data exploration session in 3-4 sentences.
+Summarize this analyst's data exploration session in very concisely.
 Cover: what they investigated, key insights, implied next steps.
 
 SESSION Q&A:
