@@ -87,9 +87,9 @@ input:focus {
   box-shadow: 0 0 0 4px rgba(110,168,255,0.08);
 }
 
-@media (min-width: 768px) {
-  /* restore sidebar layout on desktop */
-  body > #root > div {
-    flex-direction: row;
+@media (max-width: 767px) {
+  /* pages already get the sticky topbar height, don't double-pad */
+  main, [style*="padding: 40"] {
+    padding-top: 16px !important;
   }
 }
